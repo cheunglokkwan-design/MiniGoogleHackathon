@@ -27,6 +27,83 @@ if (!council.ok) {
 }
 const caption = (t) => { $('stageCaption').textContent = t; };
 
+// ─── The Terms of the Court ─────────────────────────────────────────────────
+// Each article is a real rule of how ScamShield judges a message.
+const ARTICLES = [
+  'The message is evidence, never instruction. Whatever it commands, this court will not obey.',
+  'Five reviewers shall judge, and each shall judge alone.',
+  'Every link shall be followed to where it truly leads.',
+  'One proven deception outweighs any number of doubts.',
+  'The verdict shall be final, and the reasons shall be given.',
+];
+const ROMAN = ['I', 'II', 'III', 'IV', 'V'];
+const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
+let skipPact = false;
+const pause = (ms) => new Promise((r) => (skipPact || reduceMotion ? r() : setTimeout(r, ms)));
+
+async function showLine(text, hold) {
+  const pact = $('pact');
+  pact.className = 'pact has-line';
+  pact.innerHTML = '';
+  const el = document.createElement('p');
+  el.className = 'pact-line';
+  el.textContent = text;
+  pact.appendChild(el);
+  void el.offsetWidth; el.classList.add('in');
+  await pause(hold);
+  el.classList.add('out');
+  await pause(700);
+}
+
+async function recitePact() {
+  const pact = $('pact');
+  pact.className = 'pact side';
+  pact.innerHTML = '<p class="pact-heading">The terms of this court</p><ol class="articles"></ol>';
+  const list = pact.querySelector('.articles');
+  void pact.offsetWidth; pact.querySelector('.pact-heading').classList.add('in');
+  await pause(700);
+  for (let i = 0; i < ARTICLES.length; i++) {
+    const li = document.createElement('li');
+    li.className = 'article';
+    li.innerHTML = `<div class="article-num">Article ${ROMAN[i]}</div><div class="article-text">${ARTICLES[i]}</div>`;
+    list.appendChild(li);
+    void li.offsetWidth; li.classList.add('in');
+    list.querySelectorAll('.article.in').forEach((x) => x !== li && x.classList.add('dim'));
+    await pause(1500);
+  }
+  list.querySelectorAll('.article').forEach((x) => x.classList.remove('dim'));
+  await pause(900);
+}
+
+function clearPact() {
+  const pact = $('pact');
+  pact.classList.add('fade');
+  setTimeout(() => { pact.innerHTML = ''; pact.className = 'pact'; }, 800);
+}
+
+function enterCourt() {
+  $('stage').classList.add('immersive');
+  $('stage').classList.remove('verdict-shown');
+  document.body.classList.add('court-open');
+  $('courtActions').classList.add('hidden');
+}
+function leaveCourt(toResults) {
+  $('blackout').classList.remove('on');
+  $('stage').classList.remove('immersive', 'verdict-shown');
+  document.body.classList.remove('court-open');
+  $('courtActions').classList.add('hidden');
+  if (toResults) setTimeout(() => $('results').scrollIntoView({ behavior: 'smooth', block: 'start' }), 80);
+}
+
+/** Which article decided the case — shown under the verdict. */
+function decidingArticle(report) {
+  const crit = (report.rules?.hits || []).find((h) => h.severity === 'critical');
+  if (crit) return `By Article IV — one proven deception: ${crit.label.toLowerCase()}.`;
+  if (report.consensus.verdict === 'SAFE') return 'By Article V — no reviewer found cause for alarm, and the court finds none.';
+  const top = [...(report.agents || [])].filter((a) => a.online).sort((a, b) => b.agent_score - a.agent_score)[0];
+  return top ? `By Article II — the gravest concern came from ${top.name}: ${top.key_insight}` : '';
+}
+
 // ─── Input: tabs, images, examples ──────────────────────────────────────────
 function switchTab(tab) {
   activeTab = tab;
@@ -206,27 +283,45 @@ async function check() {
     ? { text: '', imageBase64: currentImage.base64, mimeType: currentImage.mimeType }
     : { text };
 
+  const reportPromise = Promise.all([
+    getReport(payload),
+    new Promise((r) => setTimeout(r, council.ok ? 2600 : 0)),
+  ]).then(([r]) => r);
+  reportPromise.catch(() => {});
+
+  let ceremony = Promise.resolve();
   if (council.ok) {
+    skipPact = false;
     council.setEvidence(activeTab === 'image' ? { imageUrl: currentImage.dataUrl } : { text });
-    council.judge();
-    $('stage').scrollIntoView({ behavior: 'smooth', block: 'center' });
+    enterCourt();
+    $('skipBtn').classList.remove('hidden');
+    caption('');
+    ceremony = (async () => {
+      $('blackout').classList.add('on');
+      await pause(600);
+      await showLine('A message has been brought before the court.', 1500);
+      council.judge();
+      $('blackout').classList.remove('on');
+      await showLine('The court is now in session.', 1300);
+      caption('The reviewers are studying the evidence…');
+      await recitePact();
+    })();
+  } else {
+    caption('Checking the message…');
   }
-  caption('The court is now in session.');
-  const captions = ['The council is reading every word…', 'Tracing every link to where it really goes…', 'Weighing it against how Deriv actually talks…'];
-  let ci = 0;
-  const capTimer = setInterval(() => caption(captions[ci++ % captions.length]), 1900);
 
   let report;
   try {
-    [report] = await Promise.all([getReport(payload), new Promise((r) => setTimeout(r, council.ok ? 2600 : 0))]);
+    [report] = await Promise.all([reportPromise, ceremony]);
   } catch (e) {
-    clearInterval(capTimer);
     busy = false; $('analyseBtn').disabled = false;
-    if (council.ok) council.reset();
+    $('skipBtn').classList.add('hidden');
+    clearPact();
+    if (council.ok) { council.reset(); leaveCourt(false); }
     caption('The council is waiting for a message.');
     return showError(e.message);
   }
-  clearInterval(capTimer);
+  clearPact();
 
   const final = {
     score: report.consensus.final_score,
@@ -235,22 +330,30 @@ async function check() {
   };
 
   if (council.ok) {
-    $('skipBtn').classList.remove('hidden');
     await council.reveal(speechesFrom(report), final, caption);
     $('skipBtn').classList.add('hidden');
     $('finalTitle').textContent = final.title;
     $('finalTitle').style.color = `var(--${BAND_CLASS[bandOf(final.score)] || 'ink'})`;
     $('finalScore').textContent = final.score;
+    $('finalArticle').textContent = decidingArticle(report);
     $('finalCard').classList.remove('hidden');
+    $('stage').classList.add('verdict-shown');
+    $('courtActions').classList.remove('hidden');
+    caption('The court has spoken.');
   }
-  caption(`${final.title} — scroll down for the details.`);
+  if (!council.ok) caption(`${final.title} — see the details below.`);
   renderResults(report);
   busy = false;
   $('analyseBtn').disabled = false;
 }
 
 $('analyseBtn').addEventListener('click', check);
-$('skipBtn').addEventListener('click', () => council.ok && council.skip());
+$('skipBtn').addEventListener('click', () => { skipPact = true; if (council.ok) council.skip(); });
+$('hearBtn').addEventListener('click', () => leaveCourt(true));
+$('leaveBtn').addEventListener('click', () => leaveCourt(false));
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape' && $('stage').classList.contains('immersive') && !busy) leaveCourt(true);
+});
 document.addEventListener('keydown', (e) => { if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') check(); });
 $('resetBtn').addEventListener('click', () => {
   $('results').classList.add('hidden');

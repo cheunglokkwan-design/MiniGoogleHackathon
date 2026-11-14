@@ -29,11 +29,18 @@
       <div class="stage-canvas" id="stageCanvas"></div>
       <div class="bubbles" id="bubbles" aria-live="polite"></div>
       <div class="stage-caption" id="stageCaption">The council is waiting for a message.</div>
-      <button class="stage-skip hidden" id="skipBtn" type="button">Skip to results</button>
+      <div class="blackout" id="blackout"></div><div class="letterbox top"></div><div class="letterbox bottom"></div>
+      <div class="pact" id="pact" aria-live="polite"></div>
+      <div class="court-actions hidden" id="courtActions">
+        <button class="primary" id="hearBtn" type="button">Read the full judgement</button>
+        <button class="ghost" id="leaveBtn" type="button">Leave the court</button>
+      </div>
+      <button class="stage-skip hidden" id="skipBtn" type="button">Skip ›</button>
       <div class="final-card hidden" id="finalCard" role="status">
         <p class="final-eyebrow">The council's verdict</p>
         <p class="final-title" id="finalTitle"></p>
         <p class="final-score"><span id="finalScore">0</span><span class="of">/100 risk</span></p>
+        <p class="final-article" id="finalArticle"></p>
       </div>
     </section>
 
