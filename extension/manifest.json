@@ -1,0 +1,17 @@
+{
+  "manifest_version": 3,
+  "name": "ScamShield — Deriv message checker",
+  "short_name": "ScamShield",
+  "version": "1.1.0",
+  "description": "Is that message really from Deriv? Right-click any text or scan the page, and a council of five reviewers gives you a verdict.",
+  "action": {
+    "default_title": "Open ScamShield",
+    "default_icon": { "16": "icons/16.png", "32": "icons/32.png", "48": "icons/48.png" }
+  },
+  "icons": { "16": "icons/16.png", "32": "icons/32.png", "48": "icons/48.png", "128": "icons/128.png" },
+  "background": { "service_worker": "background.js", "type": "module" },
+  "permissions": ["contextMenus", "storage", "activeTab"],
+  "host_permissions": ["https://generativelanguage.googleapis.com/*"],
+  "optional_host_permissions": ["https://*/*"],
+  "content_security_policy": { "extension_pages": "script-src 'self'; object-src 'self'" }
+}

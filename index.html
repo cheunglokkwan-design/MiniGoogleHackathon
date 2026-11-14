@@ -3,232 +3,132 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="description" content="ScamShield — AI-powered multi-agent tool that detects suspicious messages impersonating Deriv support. Paste a message or upload a screenshot for instant analysis." />
-  <meta property="og:title" content="ScamShield | Detect Fake Deriv Messages" />
-  <meta property="og:description" content="4 specialized AI agents analyse suspicious messages claiming to be from Deriv support. Get an instant scam risk score." />
-  <title>ScamShield | Detect Fake Deriv Messages</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <meta name="description" content="Check whether a message claiming to be from Deriv is genuine. Five reviewers look at your message or screenshot and tell you what they think." />
+  <title>ScamShield — Is this message really from Deriv?</title>
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
+  <div class="page" id="app">
 
-  <!-- ── Header ─────────────────────────────────────────────────── -->
-  <header class="header">
-    <div class="container header-inner">
-      <div class="logo">
-        <svg class="logo-icon" viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path d="M18 2L4 8v10c0 9.5 6.1 18.4 14 20 7.9-1.6 14-10.5 14-20V8L18 2z" fill="url(#shieldGrad)"/>
-          <path d="M12 18l4 4 8-8" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
-          <defs>
-            <linearGradient id="shieldGrad" x1="4" y1="2" x2="32" y2="38" gradientUnits="userSpaceOnUse">
-              <stop stop-color="#ff444f"/>
-              <stop offset="1" stop-color="#c0392b"/>
-            </linearGradient>
-          </defs>
-        </svg>
-        <span class="logo-text">Scam<span class="logo-accent">Shield</span></span>
+    <header class="masthead">
+      <a class="wordmark" href="./">
+        <svg class="mark" viewBox="0 0 20 22" aria-hidden="true"><path d="M10 1 1.5 4.5v6.2c0 5.2 3.6 9.6 8.5 10.8 4.9-1.2 8.5-5.6 8.5-10.8V4.5L10 1Z" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="m6.2 11.2 2.6 2.6 5-5.2" fill="none" stroke="currentColor" stroke-width="1.8"/></svg>
+        ScamShield
+      </a>
+      <span class="masthead-note">An independent check for Deriv customers</span>
+      <button class="text-btn hidden" id="settingsBtn" type="button">Settings</button>
+    </header>
+
+    <section class="hero">
+      <h1>Is this message really from&nbsp;Deriv?</h1>
+      <p class="lede">Show it to the council. Five reviewers each look at your message or screenshot from a different angle, then tell you what they think.</p>
+    </section>
+
+    <!-- ── 3D council ─────────────────────────────────────────── -->
+    <section class="stage" id="stage" aria-label="Review council">
+      <div class="stage-canvas" id="stageCanvas"></div>
+      <div class="bubbles" id="bubbles" aria-live="polite"></div>
+      <div class="stage-caption" id="stageCaption">The council is waiting for a message.</div>
+      <button class="stage-skip hidden" id="skipBtn" type="button">Skip to results</button>
+      <div class="final-card hidden" id="finalCard" role="status">
+        <p class="final-eyebrow">The council's verdict</p>
+        <p class="final-title" id="finalTitle"></p>
+        <p class="final-score"><span id="finalScore">0</span><span class="of">/100 risk</span></p>
       </div>
-      <div class="powered-badge">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" stroke="#4285f4" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-        <span>Powered by <strong>Gemini AI</strong></span>
+    </section>
+
+    <!-- ── Settings (extension only) ─────────────────────────── -->
+    <section class="settings hidden" id="settings">
+      <h3>Settings</h3>
+      <p class="muted">Your key is stored only in this browser and sent only to Google's Gemini API. Leave both blank to use link and pattern rules only.</p>
+      <label>Gemini API key <input id="setKey" type="password" autocomplete="off" placeholder="AIza…" /></label>
+      <label>Or a ScamShield server URL <input id="setServer" type="url" placeholder="https://your-app.vercel.app" /></label>
+      <div class="actions"><button class="primary" id="saveSettings" type="button">Save</button><span class="hint" id="settingsSaved"></span></div>
+    </section>
+
+    <!-- ── Input ─────────────────────────────────────────────── -->
+    <section class="field" id="inputSection">
+      <div class="switch" role="tablist">
+        <button class="switch-btn active" id="tab-text" role="tab" aria-selected="true" data-tab="text">Text</button>
+        <button class="switch-btn" id="tab-image" role="tab" aria-selected="false" data-tab="image">Screenshot</button>
       </div>
-    </div>
-  </header>
 
-  <!-- ── Hero ───────────────────────────────────────────────────── -->
-  <section class="hero">
-    <div class="container">
-      <div class="hero-badge">
-        <span class="hero-badge-dot"></span>
-        Deriv Security Tool — Google Dev Day 2026
+      <div id="panel-text" role="tabpanel">
+        <textarea id="messageInput" rows="6" aria-label="Message text" placeholder="Paste the message here"></textarea>
+        <div class="examples" id="examples"></div>
       </div>
-      <h1>Got a Suspicious Message<br />from <span class="highlight">"Deriv Support"?</span></h1>
-      <p class="hero-sub">Our panel of <strong>4 AI agents</strong> independently analyses the message and reaches a consensus verdict in seconds. Paste the text or upload a screenshot.</p>
-      <div class="hero-stats">
-        <div class="stat"><span class="stat-num">4</span><span class="stat-label">AI Agents</span></div>
-        <div class="stat-divider"></div>
-        <div class="stat"><span class="stat-num">~8s</span><span class="stat-label">Analysis Time</span></div>
-        <div class="stat-divider"></div>
-        <div class="stat"><span class="stat-num">100%</span><span class="stat-label">Private</span></div>
-      </div>
-    </div>
-  </section>
 
-  <!-- ── Main ───────────────────────────────────────────────────── -->
-  <main class="main">
-    <div class="container">
-
-      <!-- Input Card -->
-      <div class="card input-card" id="inputSection">
-        <div class="tab-bar" role="tablist">
-          <button class="tab-btn active" id="tab-text" role="tab" aria-selected="true" onclick="switchTab('text')">
-            <span aria-hidden="true">📋</span> Paste Message
-          </button>
-          <button class="tab-btn" id="tab-image" role="tab" aria-selected="false" onclick="switchTab('image')">
-            <span aria-hidden="true">📸</span> Upload Screenshot
-          </button>
-        </div>
-
-        <!-- Text Panel -->
-        <div class="tab-panel" id="panel-text" role="tabpanel">
-          <textarea
-            id="messageInput"
-            placeholder="Paste the suspicious message here…&#10;&#10;e.g. 'Dear Deriv customer, your account has been flagged for suspicious activity. Verify within 24 hours or your account will be suspended. Click: http://deriv-verify-secure.net'"
-            rows="8"
-            aria-label="Suspicious message text"
-          ></textarea>
-        </div>
-
-        <!-- Image Panel -->
-        <div class="tab-panel hidden" id="panel-image" role="tabpanel">
-          <div class="dropzone" id="dropzone" role="button" tabindex="0" aria-label="Upload screenshot">
-            <div class="dropzone-body" id="dropzoneBody">
-              <div class="dropzone-icon">📷</div>
-              <p class="dropzone-title">Drop your screenshot here</p>
-              <p class="dropzone-sub">Supports WhatsApp, SMS, Email, Telegram screenshots</p>
-              <label class="browse-label" for="fileInput">Browse Files</label>
-              <input type="file" id="fileInput" accept="image/*" aria-label="Upload screenshot file" />
-            </div>
-            <img id="imagePreview" class="image-preview hidden" alt="Screenshot preview" />
+      <div id="panel-image" class="hidden" role="tabpanel">
+        <div class="dropzone" id="dropzone" role="button" tabindex="0" aria-label="Upload screenshot">
+          <div id="dropzoneBody">
+            <p><strong>Drop a screenshot here</strong>, <label class="link" for="fileInput">choose a file</label>, or paste with <kbd>Ctrl</kbd>+<kbd>V</kbd>.</p>
+            <p class="muted">WhatsApp, Telegram, SMS or email — anything with the message visible.</p>
+            <input type="file" id="fileInput" accept="image/*" hidden />
           </div>
-          <button class="clear-image hidden" id="clearImage" onclick="clearImage()" aria-label="Remove image">
-            ✕ Remove Image
-          </button>
+          <img id="imagePreview" class="image-preview hidden" alt="Screenshot preview" />
         </div>
-
-        <button class="analyse-btn" id="analyseBtn" onclick="analyseMessage()">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="11" cy="11" r="8" stroke="white" stroke-width="2.5"/><path d="m21 21-4.35-4.35" stroke="white" stroke-width="2.5" stroke-linecap="round"/></svg>
-          <span>Analyse Message</span>
-        </button>
+        <button class="text-btn hidden" id="clearImage" type="button">Remove screenshot</button>
       </div>
 
-      <!-- Error Banner -->
-      <div class="error-banner hidden" id="errorBanner" role="alert">
-        <span class="error-icon">⚠️</span>
-        <span id="errorText">Something went wrong. Please try again.</span>
+      <div class="actions">
+        <button class="primary" id="analyseBtn" type="button">Show the council</button>
+        <span class="hint"><kbd>Ctrl</kbd>+<kbd>Enter</kbd></span>
+      </div>
+      <p class="error hidden" id="errorBanner" role="alert"><span id="errorText"></span></p>
+    </section>
+
+    <!-- ── Results (plain, readable detail) ──────────────────── -->
+    <section class="results hidden" id="results">
+
+      <p class="notice hidden" id="noticeBanner"></p>
+
+      <div class="verdict" id="verdict">
+        <div class="verdict-top">
+          <h2 class="verdict-title" id="verdictText">—</h2>
+          <div class="risk"><span class="risk-num" id="riskNum">0</span><span class="risk-of">/100 risk</span></div>
+        </div>
+        <div class="meter"><div class="meter-fill" id="meterFill"></div></div>
+        <p class="verdict-summary" id="consensusSummary"></p>
       </div>
 
-      <!-- Loading State -->
-      <div class="loading-section hidden" id="loadingSection">
-        <div class="loading-orb-wrap">
-          <div class="loading-orb">
-            <div class="orb-ring r1"></div>
-            <div class="orb-ring r2"></div>
-            <div class="orb-ring r3"></div>
-            <div class="orb-core">🛡️</div>
-          </div>
+      <div class="block">
+        <h3>What to do now</h3>
+        <ol class="todo" id="actionsList"></ol>
+      </div>
+
+      <div class="block">
+        <h3>What we found <span class="block-note" id="ruleScore"></span></h3>
+        <div class="ocr hidden" id="ocrBox"></div>
+        <table class="links"><tbody id="linksList"></tbody></table>
+        <ul class="hits" id="hitsList"></ul>
+      </div>
+
+      <div class="block" id="reviewsBlock">
+        <h3>The reviewers' notes</h3>
+        <div class="reviews" id="agentsGrid"></div>
+      </div>
+
+      <div class="block two-col">
+        <div>
+          <h3>Deriv will never</h3>
+          <ul class="never" id="neverList"></ul>
         </div>
-        <div class="loading-info">
-          <p class="loading-title" id="loadingTitle">Dispatching AI Agent Panel…</p>
-          <div class="loading-agents">
-            <div class="loading-agent"><span>🔍</span> Linguistic Analyst</div>
-            <div class="loading-agent"><span>🔗</span> Technical Inspector</div>
-            <div class="loading-agent"><span>🧠</span> Psychological Profiler</div>
-            <div class="loading-agent"><span>🏢</span> Brand Authenticator</div>
-          </div>
-          <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
-          <p class="loading-sub" id="loadingSub">All 4 agents deliberating in parallel…</p>
+        <div>
+          <h3>How to check for yourself</h3>
+          <p id="verifyText"></p>
+          <a class="link" href="https://deriv.com" target="_blank" rel="noopener noreferrer">Go to deriv.com ↗</a>
         </div>
       </div>
 
-      <!-- Results -->
-      <div class="results hidden" id="results">
+      <button class="secondary" id="resetBtn" type="button">Check another message</button>
+    </section>
 
-        <!-- Section label -->
-        <div class="section-label">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" stroke="#ff444f" stroke-width="2" stroke-linecap="round"/></svg>
-          AI Agent Panel — Independent Verdicts
-        </div>
+    <footer class="footer">
+      <p>ScamShield is an independent tool and is not operated by Deriv. If in doubt, contact Deriv through live chat at <a href="https://deriv.com" target="_blank" rel="noopener noreferrer">deriv.com</a>.</p>
+      <p class="muted">Built at Google Dev Day 2026, Sunway University. Reviews by Gemini<span id="modelTag"></span>.</p>
+    </footer>
+  </div>
 
-        <!-- 4 Agent Cards Grid -->
-        <div class="agents-grid" id="agentsGrid"></div>
-
-        <!-- Consensus Card -->
-        <div class="card consensus-card" id="consensusCard">
-          <div class="consensus-left">
-            <div class="gauge-wrap">
-              <svg class="main-gauge" viewBox="0 0 200 200" aria-hidden="true">
-                <circle class="gauge-track" cx="100" cy="100" r="80"/>
-                <circle class="gauge-fill" id="mainGaugeFill" cx="100" cy="100" r="80"/>
-              </svg>
-              <div class="gauge-center">
-                <div class="gauge-score-num" id="mainGaugeScore">0</div>
-                <div class="gauge-score-label">/ 100</div>
-                <div class="gauge-score-sub">CONSENSUS</div>
-              </div>
-            </div>
-          </div>
-          <div class="consensus-right">
-            <p class="consensus-eyebrow">Panel Verdict</p>
-            <div class="verdict-badge" id="verdictBadge">
-              <span id="verdictIcon">⚠️</span>
-              <span id="verdictText">Analysing…</span>
-            </div>
-            <p class="consensus-summary" id="consensusSummary"></p>
-            <div class="agent-scores-row" id="agentScoresRow"></div>
-          </div>
-        </div>
-
-        <!-- Advice Grid -->
-        <div class="advice-grid" id="adviceSection">
-
-          <div class="card advice-card">
-            <div class="card-head">
-              <span class="card-head-icon" aria-hidden="true">⚡</span>
-              <h2>What To Do Right Now</h2>
-            </div>
-            <ol class="actions-list" id="actionsList"></ol>
-          </div>
-
-          <div class="card advice-card">
-            <div class="card-head">
-              <span class="card-head-icon" aria-hidden="true">🚩</span>
-              <h2>Red Flags Detected</h2>
-            </div>
-            <ul class="flags-list" id="flagsList"></ul>
-          </div>
-
-          <div class="card advice-card">
-            <div class="card-head">
-              <span class="card-head-icon" aria-hidden="true">🛡️</span>
-              <h2>Deriv Will Never…</h2>
-            </div>
-            <ul class="never-list" id="neverList"></ul>
-          </div>
-
-          <div class="card advice-card verify-full">
-            <div class="card-head">
-              <span class="card-head-icon" aria-hidden="true">✅</span>
-              <h2>How To Verify It's Real</h2>
-            </div>
-            <p class="verify-text" id="verifyText"></p>
-            <a class="official-link" href="https://deriv.com" target="_blank" rel="noopener noreferrer">
-              Go to Official Deriv.com
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6M15 3h6v6M10 14L21 3" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-            </a>
-          </div>
-
-        </div>
-
-        <button class="scan-again-btn" onclick="resetApp()">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M23 4v6h-6M1 20v-6h6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-          Scan Another Message
-        </button>
-
-      </div>
-    </div>
-  </main>
-
-  <!-- ── Footer ─────────────────────────────────────────────────── -->
-  <footer class="footer">
-    <div class="container">
-      <p>ScamShield is a security tool built to protect Deriv customers. When in doubt, always contact Deriv through the official live chat at <a href="https://deriv.com" target="_blank" rel="noopener noreferrer">deriv.com</a> — never via WhatsApp or Telegram.</p>
-      <p class="footer-sub">Built at Google Dev Day 2026 · Sunway University Malaysia</p>
-    </div>
-  </footer>
-
-  <script src="script.js"></script>
+  <script type="module" src="app.js"></script>
 </body>
 </html>
