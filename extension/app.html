@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Check whether a message claiming to be from Deriv is genuine. Five reviewers look at your message or screenshot and tell you what they think." />
+  <title>ScamShield — Is this message really from Deriv?</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="page" id="app">
+
+    <header class="masthead">
+      <a class="wordmark" href="./">
+        <svg class="mark" viewBox="0 0 20 22" aria-hidden="true"><path d="M10 1 1.5 4.5v6.2c0 5.2 3.6 9.6 8.5 10.8 4.9-1.2 8.5-5.6 8.5-10.8V4.5L10 1Z" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="m6.2 11.2 2.6 2.6 5-5.2" fill="none" stroke="currentColor" stroke-width="1.8"/></svg>
+        ScamShield
+      </a>
+      <span class="masthead-note">An independent check for Deriv customers</span>
+      <button class="text-btn hidden" id="settingsBtn" type="button">Settings</button>
+    </header>
+
+    <section class="hero">
+      <h1>Is this message really from&nbsp;Deriv?</h1>
+      <p class="lede">Show it to the council. Five reviewers each look at your message or screenshot from a different angle, then tell you what they think.</p>
+    </section>
+
+    <!-- ── 3D council ─────────────────────────────────────────── -->
+    <section class="stage" id="stage" aria-label="Review council">
+      <div class="stage-canvas" id="stageCanvas"></div>
+      <div class="bubbles" id="bubbles" aria-live="polite"></div>
+      <div class="stage-caption" id="stageCaption">The council is waiting for a message.</div>
+      <button class="stage-skip hidden" id="skipBtn" type="button">Skip to results</button>
+      <div class="final-card hidden" id="finalCard" role="status">
+        <p class="final-eyebrow">The council's verdict</p>
+        <p class="final-title" id="finalTitle"></p>
+        <p class="final-score"><span id="finalScore">0</span><span class="of">/100 risk</span></p>
+      </div>
+    </section>
+
+    <!-- ── Settings (extension only) ─────────────────────────── -->
+    <section class="settings hidden" id="settings">
+      <h3>Settings</h3>
+      <p class="muted">Your key is stored only in this browser and sent only to Google's Gemini API. Leave both blank to use link and pattern rules only.</p>
+      <label>Gemini API key <input id="setKey" type="password" autocomplete="off" placeholder="AIza…" /></label>
+      <label>Or a ScamShield server URL <input id="setServer" type="url" placeholder="https://your-app.vercel.app" /></label>
+      <div class="actions"><button class="primary" id="saveSettings" type="button">Save</button><span class="hint" id="settingsSaved"></span></div>
+    </section>
+
+    <!-- ── Input ─────────────────────────────────────────────── -->
+    <section class="field" id="inputSection">
+      <div class="switch" role="tablist">
+        <button class="switch-btn active" id="tab-text" role="tab" aria-selected="true" data-tab="text">Text</button>
+        <button class="switch-btn" id="tab-image" role="tab" aria-selected="false" data-tab="image">Screenshot</button>
+      </div>
+
+      <div id="panel-text" role="tabpanel">
+        <textarea id="messageInput" rows="6" aria-label="Message text" placeholder="Paste the message here"></textarea>
+        <div class="examples" id="examples"></div>
+      </div>
+
+      <div id="panel-image" class="hidden" role="tabpanel">
+        <div class="dropzone" id="dropzone" role="button" tabindex="0" aria-label="Upload screenshot">
+          <div id="dropzoneBody">
+            <p><strong>Drop a screenshot here</strong>, <label class="link" for="fileInput">choose a file</label>, or paste with <kbd>Ctrl</kbd>+<kbd>V</kbd>.</p>
+            <p class="muted">WhatsApp, Telegram, SMS or email — anything with the message visible.</p>
+            <input type="file" id="fileInput" accept="image/*" hidden />
+          </div>
+          <img id="imagePreview" class="image-preview hidden" alt="Screenshot preview" />
+        </div>
+        <button class="text-btn hidden" id="clearImage" type="button">Remove screenshot</button>
+      </div>
+
+      <div class="actions">
+        <button class="primary" id="analyseBtn" type="button">Show the council</button>
+        <span class="hint"><kbd>Ctrl</kbd>+<kbd>Enter</kbd></span>
+      </div>
+      <p class="error hidden" id="errorBanner" role="alert"><span id="errorText"></span></p>
+    </section>
+
+    <!-- ── Results (plain, readable detail) ──────────────────── -->
+    <section class="results hidden" id="results">
+
+      <p class="notice hidden" id="noticeBanner"></p>
+
+      <div class="verdict" id="verdict">
+        <div class="verdict-top">
+          <h2 class="verdict-title" id="verdictText">—</h2>
+          <div class="risk"><span class="risk-num" id="riskNum">0</span><span class="risk-of">/100 risk</span></div>
+        </div>
+        <div class="meter"><div class="meter-fill" id="meterFill"></div></div>
+        <p class="verdict-summary" id="consensusSummary"></p>
+      </div>
+
+      <div class="block">
+        <h3>What to do now</h3>
+        <ol class="todo" id="actionsList"></ol>
+      </div>
+
+      <div class="block">
+        <h3>What we found <span class="block-note" id="ruleScore"></span></h3>
+        <div class="ocr hidden" id="ocrBox"></div>
+        <table class="links"><tbody id="linksList"></tbody></table>
+        <ul class="hits" id="hitsList"></ul>
+      </div>
+
+      <div class="block" id="reviewsBlock">
+        <h3>The reviewers' notes</h3>
+        <div class="reviews" id="agentsGrid"></div>
+      </div>
+
+      <div class="block two-col">
+        <div>
+          <h3>Deriv will never</h3>
+          <ul class="never" id="neverList"></ul>
+        </div>
+        <div>
+          <h3>How to check for yourself</h3>
+          <p id="verifyText"></p>
+          <a class="link" href="https://deriv.com" target="_blank" rel="noopener noreferrer">Go to deriv.com ↗</a>
+        </div>
+      </div>
+
+      <button class="secondary" id="resetBtn" type="button">Check another message</button>
+    </section>
+
+    <footer class="footer">
+      <p>ScamShield is an independent tool and is not operated by Deriv. If in doubt, contact Deriv through live chat at <a href="https://deriv.com" target="_blank" rel="noopener noreferrer">deriv.com</a>.</p>
+      <p class="muted">Built at Google Dev Day 2026, Sunway University. Reviews by Gemini<span id="modelTag"></span>.</p>
+    </footer>
+  </div>
+
+  <script type="module" src="app.js"></script>
+</body>
+</html>

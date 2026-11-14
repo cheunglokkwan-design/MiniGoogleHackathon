@@ -1,0 +1,15 @@
+{
+  "name": "scamshield",
+  "version": "1.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Multi-agent Gemini scam detector for messages impersonating Deriv",
+  "scripts": {
+    "dev": "node dev-server.js",
+    "test": "node --test",
+    "build:ext": "node scripts/build-extension.mjs"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
