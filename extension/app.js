@@ -69,7 +69,7 @@ async function recitePact() {
     list.appendChild(li);
     void li.offsetWidth; li.classList.add('in');
     list.querySelectorAll('.article.in').forEach((x) => x !== li && x.classList.add('dim'));
-    await pause(1500);
+    await pause(1150);
   }
   list.querySelectorAll('.article').forEach((x) => x.classList.remove('dim'));
   await pause(900);
@@ -86,14 +86,74 @@ function enterCourt() {
   $('stage').classList.remove('verdict-shown');
   document.body.classList.add('court-open');
   $('courtActions').classList.add('hidden');
+  $('enterCourtBtn').classList.add('hidden');
 }
 function leaveCourt(toResults) {
+  skipPact = true;
   $('blackout').classList.remove('on');
+  $('charter').classList.add('hidden');
   $('stage').classList.remove('immersive', 'verdict-shown');
-  document.body.classList.remove('court-open');
+  document.body.classList.remove('court-open', 'court-awaiting');
   $('courtActions').classList.add('hidden');
+  $('exitBtn').classList.add('hidden');
+  $('skipBtn').classList.add('hidden');
+  $('pact').innerHTML = '';
+  if (council.ok) $('enterCourtBtn').classList.remove('hidden');
   if (toResults) setTimeout(() => $('results').scrollIntoView({ behavior: 'smooth', block: 'start' }), 80);
+  else if (council.ok && !busy) {
+    $('finalCard').classList.add('hidden');
+    council.reset();
+    caption('The council is waiting for a message.');
+  }
 }
+
+function awaitEvidence() {
+  $('charter').classList.add('hidden');
+  $('finalCard').classList.add('hidden');
+  $('courtActions').classList.add('hidden');
+  $('stage').classList.remove('verdict-shown');
+  $('exitBtn').classList.remove('hidden');
+  document.body.classList.add('court-awaiting');
+  caption('The court awaits your evidence.');
+  setTimeout(() => $('messageInput').focus({ preventScroll: true }), 300);
+}
+
+function showCharter() {
+  const c = $('charter');
+  c.classList.remove('hidden', 'leaving');
+  c.scrollTop = 0;
+  caption('');
+  setTimeout(() => $('acceptCharter').focus({ preventScroll: true }), 600);
+}
+
+// Opening: the app begins inside the court
+async function openCourt() {
+  skipPact = false;
+  enterCourt();
+  $('blackout').classList.add('on');
+  await pause(500);
+  await showLine('You have entered the Court of ScamShield.', 1700);
+  council.enterDomain();
+  $('blackout').classList.remove('on');
+  $('pact').innerHTML = '';
+  await pause(1300);
+  if (!document.body.classList.contains('court-open')) return; // left during the intro
+  showCharter();
+}
+
+$('acceptCharter').addEventListener('click', () => {
+  $('charter').classList.add('leaving');
+  setTimeout(awaitEvidence, 650);
+});
+$('declineCharter').addEventListener('click', () => leaveCourt(false));
+$('exitBtn').addEventListener('click', () => leaveCourt(false));
+$('enterCourtBtn').addEventListener('click', async () => {
+  enterCourt();
+  await council.enterDomain();
+  awaitEvidence();
+});
+// Click or key during the opening skips straight to the charter
+$('stage').addEventListener('click', () => { if (!busy && $('blackout').classList.contains('on')) skipPact = true; });
 
 /** Which article decided the case — shown under the verdict. */
 function decidingArticle(report) {
@@ -293,13 +353,16 @@ async function check() {
   if (council.ok) {
     skipPact = false;
     council.setEvidence(activeTab === 'image' ? { imageUrl: currentImage.dataUrl } : { text });
+    const alreadyInside = document.body.classList.contains('court-open');
+    document.body.classList.remove('court-awaiting');
+    $('exitBtn').classList.add('hidden');
     enterCourt();
     $('skipBtn').classList.remove('hidden');
     caption('');
     ceremony = (async () => {
-      $('blackout').classList.add('on');
-      await pause(600);
-      await showLine('A message has been brought before the court.', 1500);
+      if (!alreadyInside) $('blackout').classList.add('on');
+      await pause(alreadyInside ? 200 : 600);
+      await showLine(alreadyInside ? 'The evidence is entered.' : 'A message has been brought before the court.', 1400);
       council.judge();
       $('blackout').classList.remove('on');
       await showLine('The court is now in session.', 1300);
@@ -317,8 +380,8 @@ async function check() {
     busy = false; $('analyseBtn').disabled = false;
     $('skipBtn').classList.add('hidden');
     clearPact();
-    if (council.ok) { council.reset(); leaveCourt(false); }
-    caption('The council is waiting for a message.');
+    if (council.ok) { council.reset({ keepDomain: true }); awaitEvidence(); }
+    else caption('The council is waiting for a message.');
     return showError(e.message);
   }
   clearPact();
@@ -351,8 +414,15 @@ $('analyseBtn').addEventListener('click', check);
 $('skipBtn').addEventListener('click', () => { skipPact = true; if (council.ok) council.skip(); });
 $('hearBtn').addEventListener('click', () => leaveCourt(true));
 $('leaveBtn').addEventListener('click', () => leaveCourt(false));
+$('newEvidenceBtn').addEventListener('click', () => {
+  $('messageInput').value = ''; clearImage(); switchTab('text');
+  council.reset({ keepDomain: true });
+  $('results').classList.add('hidden');
+  awaitEvidence();
+});
 document.addEventListener('keydown', (e) => {
-  if (e.key === 'Escape' && $('stage').classList.contains('immersive') && !busy) leaveCourt(true);
+  if (e.key !== 'Escape' || busy || !$('stage').classList.contains('immersive')) return;
+  leaveCourt(!$('courtActions').classList.contains('hidden'));
 });
 document.addEventListener('keydown', (e) => { if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') check(); });
 $('resetBtn').addEventListener('click', () => {
@@ -360,9 +430,9 @@ $('resetBtn').addEventListener('click', () => {
   $('finalCard').classList.add('hidden');
   $('messageInput').value = '';
   clearImage(); switchTab('text');
-  if (council.ok) council.reset();
-  caption('The council is waiting for a message.');
-  window.scrollTo({ top: 0, behavior: 'smooth' });
+  window.scrollTo({ top: 0 });
+  if (council.ok) { council.reset({ keepDomain: true }); enterCourt(); council.enterDomain().then(awaitEvidence); }
+  else caption('The council is waiting for a message.');
 });
 
 // ─── Plain results ──────────────────────────────────────────────────────────
@@ -424,10 +494,12 @@ function renderResults(r) {
 }
 
 // ─── Hand-off from the extension (context menu / page capture) ─────────────
-(async function incoming() {
-  if (!IS_EXT || !ext.storage?.session) return;
-  const { pending } = await ext.storage.session.get('pending');
-  if (!pending) return;
+(async function start() {
+  const pending = IS_EXT && ext.storage?.session ? (await ext.storage.session.get('pending')).pending : null;
+  if (!pending) {
+    if (council.ok) openCourt();
+    return;
+  }
   await ext.storage.session.remove('pending');
   if (pending.imageDataUrl) await loadImageFromDataUrl(pending.imageDataUrl);
   else if (pending.text) { $('messageInput').value = pending.text; switchTab('text'); }

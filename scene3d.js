@@ -777,8 +777,8 @@ export function createCouncil(container, bubbleLayer) {
 
   function skip() { skipRequested = true; }
 
-  function reset() {
-    tween(900, (k) => { domain = 1 - k; applyDomain(); });
+  function reset({ keepDomain = false } = {}) {
+    if (!keepDomain && domain > 0) { const from = domain; tween(900, (k) => { domain = from * (1 - k); applyDomain(); }); }
     scaleTarget = 0;
     sigilMat.color.set('#d97757');
     mode = 'idle';
@@ -801,5 +801,12 @@ export function createCouncil(container, bubbleLayer) {
     paintCard();
   }
 
-  return { ok: true, setEvidence, judge, reveal, skip, reset, seats: SEATS };
+  /** Expand the courtroom without starting a judgement (agents face the visitor). */
+  async function enterDomain() {
+    skipRequested = false;
+    agents.forEach((a) => { lookAtPoint(a, camHome); setBubble(a, 'label'); });
+    await expand();
+  }
+
+  return { ok: true, setEvidence, judge, reveal, skip, reset, enterDomain, seats: SEATS };
 }

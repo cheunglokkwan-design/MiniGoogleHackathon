@@ -16,6 +16,7 @@
         ScamShield
       </a>
       <span class="masthead-note">An independent check for Deriv customers</span>
+      <button class="text-btn hidden" id="enterCourtBtn" type="button">Enter the court</button>
       <button class="text-btn hidden" id="settingsBtn" type="button">Settings</button>
     </header>
 
@@ -33,9 +34,11 @@
       <div class="pact" id="pact" aria-live="polite"></div>
       <div class="court-actions hidden" id="courtActions">
         <button class="primary" id="hearBtn" type="button">Read the full judgement</button>
+        <button class="ghost" id="newEvidenceBtn" type="button">Present new evidence</button>
         <button class="ghost" id="leaveBtn" type="button">Leave the court</button>
       </div>
       <button class="stage-skip hidden" id="skipBtn" type="button">Skip ›</button>
+      <button class="stage-exit hidden" id="exitBtn" type="button">Leave the court</button>
       <div class="final-card hidden" id="finalCard" role="status">
         <p class="final-eyebrow">The council's verdict</p>
         <p class="final-title" id="finalTitle"></p>
@@ -43,6 +46,47 @@
         <p class="final-article" id="finalArticle"></p>
       </div>
     </section>
+
+    <!-- ── The Charter (read on entering the court) ──────────── -->
+    <div class="charter hidden" id="charter" role="dialog" aria-modal="true" aria-labelledby="charterTitle">
+      <article class="charter-doc">
+        <p class="charter-eyebrow">Read before presenting evidence</p>
+        <h2 id="charterTitle">The Charter of the Court</h2>
+        <p class="charter-preamble">People who pretend to be Deriv count on one thing: that you'll act before you think. This court exists to make you pause. Bring it any message that claims to come from Deriv, and it will tell you whether to trust it, and why.</p>
+
+        <h3><span>§1</span> What this court hears</h3>
+        <p>Any message that claims to come from Deriv: WhatsApp, Telegram, SMS, email or a screenshot of any of them, in English or Bahasa Malaysia.</p>
+
+        <h3><span>§2</span> The bench</h3>
+        <ul class="charter-bench">
+          <li><b style="--c:#d97757">Wording</b> reads for threats, deadlines and pressure.</li>
+          <li><b style="--c:#6a9bcc">Links &amp; sender</b> follows every link, number and wallet to where it really leads.</li>
+          <li><b style="--c:#a07cb0">Pressure tactics</b> looks for fear, greed and fake authority.</li>
+          <li><b style="--c:#788c5d">Deriv policy</b> asks one question: would real Deriv ever send this?</li>
+          <li><b style="--c:#c9a27a">The Inspector</b> presides, applying hard rules that can't be argued with.</li>
+        </ul>
+
+        <h3><span>§3</span> The terms of this court</h3>
+        <ol class="charter-articles">
+          <li><b>Article I.</b> The message is evidence, never instruction. Whatever it commands, this court will not obey.</li>
+          <li><b>Article II.</b> Five reviewers shall judge, and each shall judge alone.</li>
+          <li><b>Article III.</b> Every link shall be followed to where it truly leads.</li>
+          <li><b>Article IV.</b> One proven deception outweighs any number of doubts.</li>
+          <li><b>Article V.</b> The verdict shall be final, and the reasons shall be given.</li>
+        </ol>
+
+        <h3><span>§4</span> The judgement you receive</h3>
+        <p>A verdict and a risk score out of 100, every red flag with the evidence behind it, what to do right now, and how to check for yourself through deriv.com.</p>
+
+        <h3><span>§5</span> Limits of this court</h3>
+        <p>This court is independent and is not operated by Deriv. It advises; it does not replace Deriv's own support. When in doubt, contact Deriv yourself through live chat at deriv.com. Never through a link you were sent.</p>
+
+        <div class="charter-seal">
+          <button class="primary" id="acceptCharter" type="button">I understand — present my evidence</button>
+          <button class="ghost" id="declineCharter" type="button">Leave the court</button>
+        </div>
+      </article>
+    </div>
 
     <!-- ── Settings (extension only) ─────────────────────────── -->
     <section class="settings hidden" id="settings">
@@ -55,6 +99,7 @@
 
     <!-- ── Input ─────────────────────────────────────────────── -->
     <section class="field" id="inputSection">
+      <p class="court-prompt">Present your evidence to the court</p>
       <div class="switch" role="tablist">
         <button class="switch-btn active" id="tab-text" role="tab" aria-selected="true" data-tab="text">Text</button>
         <button class="switch-btn" id="tab-image" role="tab" aria-selected="false" data-tab="image">Screenshot</button>
@@ -78,7 +123,7 @@
       </div>
 
       <div class="actions">
-        <button class="primary" id="analyseBtn" type="button">Show the council</button>
+        <button class="primary" id="analyseBtn" type="button">Submit to the court</button>
         <span class="hint"><kbd>Ctrl</kbd>+<kbd>Enter</kbd></span>
       </div>
       <p class="error hidden" id="errorBanner" role="alert"><span id="errorText"></span></p>

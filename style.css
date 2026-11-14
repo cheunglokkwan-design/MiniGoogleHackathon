@@ -278,3 +278,73 @@ body.court-open { overflow: hidden; }
 @media (max-width: 700px) { .pact.side::before { background: linear-gradient(180deg, rgba(7,5,4,.92) 0%, rgba(7,5,4,.7) 55%, transparent 80%); } }
 .blackout { position: absolute; inset: 0; background: #070504; opacity: 0; pointer-events: none; z-index: 3; transition: opacity .7s ease; }
 .blackout.on { opacity: 1; }
+
+/* ── Opening: the court is the app ───────────────── */
+#enterCourtBtn { margin-left: auto; }
+#enterCourtBtn + #settingsBtn { margin-left: 14px; }
+.court-prompt { display: none; }
+.stage-exit { position: absolute; top: calc(8.5vh + 14px); left: 20px; z-index: 6; font: 13px var(--sans); background: rgba(20,14,11,.7); color: #e8d9c8; border: 1px solid #4a3426; border-radius: 999px; padding: 5px 12px; cursor: pointer; }
+.stage-exit:hover { border-color: #e8d9c8; }
+
+/* The charter document */
+.charter { position: fixed; inset: 0; z-index: 1003; display: flex; align-items: flex-start; justify-content: center; overflow-y: auto; padding: calc(8.5vh + 24px) 20px calc(8.5vh + 24px); background: radial-gradient(70% 70% at 50% 50%, rgba(7,5,4,.35), rgba(7,5,4,.8)); animation: charterBg 1s ease both; }
+.charter-doc {
+  position: relative; max-width: 640px; width: 100%; color: #2b2722;
+  background: linear-gradient(180deg, #fbf6ec 0%, #f3ead9 100%);
+  border-radius: 6px; padding: 44px 48px 36px; box-shadow: 0 30px 90px rgba(0,0,0,.6), 0 0 0 1px rgba(217,119,87,.35), inset 0 0 60px rgba(160,120,70,.12);
+  animation: unroll 1.1s cubic-bezier(.2,.8,.2,1) both;
+}
+.charter-doc::before, .charter-doc::after { content: ""; position: absolute; left: 22px; right: 22px; height: 1px; background: rgba(184,92,62,.35); }
+.charter-doc::before { top: 16px; } .charter-doc::after { bottom: 16px; }
+.charter-eyebrow { font: 600 11px var(--sans); letter-spacing: .32em; text-transform: uppercase; color: var(--clay-dark); text-align: center; }
+.charter h2 { font: 500 clamp(28px, 4vw, 38px)/1.15 var(--serif); text-align: center; margin: 8px 0 18px; }
+.charter-preamble { font: italic 17.5px/1.55 var(--serif); color: #4a4239; text-align: center; padding-bottom: 18px; border-bottom: 1px solid #e0d3bf; }
+.charter h3 { font: 600 15px var(--sans); letter-spacing: .02em; margin: 22px 0 6px; display: flex; gap: 10px; align-items: baseline; }
+.charter h3 span { font: 500 17px var(--serif); color: var(--clay-dark); }
+.charter p, .charter li { font: 16px/1.55 var(--serif); color: #3b352e; }
+.charter-bench { list-style: none; display: grid; gap: 5px; }
+.charter-bench b { font: 600 14.5px var(--sans); }
+.charter-bench b::before { content: ""; display: inline-block; width: 9px; height: 9px; border-radius: 50%; background: var(--c); margin-right: 7px; }
+.charter-articles { list-style: none; display: grid; gap: 6px; padding-left: 0; }
+.charter-articles b { font: 600 13px var(--sans); letter-spacing: .06em; color: var(--clay-dark); text-transform: uppercase; margin-right: 4px; }
+.charter-seal { display: flex; flex-wrap: wrap; gap: 12px; justify-content: center; margin-top: 30px; padding-top: 22px; border-top: 1px solid #e0d3bf; }
+.charter .ghost { background: none; color: #5e574d; border-color: #c9b9a2; }
+.charter .ghost:hover { color: #2b2722; border-color: #2b2722; }
+.charter.leaving { animation: charterOut .7s ease forwards; }
+.charter.leaving .charter-doc { animation: rollUp .7s ease forwards; }
+@keyframes unroll { from { opacity: 0; transform: translateY(30px) scaleY(.6); filter: blur(6px) } to { opacity: 1; transform: none; filter: none } }
+@keyframes rollUp { to { opacity: 0; transform: translateY(-40px) scaleY(.7); filter: blur(6px) } }
+@keyframes charterBg { from { opacity: 0 } to { opacity: 1 } }
+@keyframes charterOut { to { opacity: 0 } }
+
+/* Evidence panel inside the court */
+body.court-awaiting #inputSection {
+  position: fixed; z-index: 1002; left: 50%; bottom: calc(8.5vh + 20px); transform: translateX(-50%);
+  width: min(640px, calc(100vw - 32px)); margin: 0;
+  background: rgba(18,13,10,.86); border: 1px solid #5a3e2e; color: #f1e4d6; backdrop-filter: blur(8px);
+  box-shadow: 0 20px 60px rgba(0,0,0,.6); animation: panelIn .7s cubic-bezier(.2,.8,.2,1) both;
+}
+body.court-awaiting .court-prompt { display: block; font: 600 11px var(--sans); letter-spacing: .32em; text-transform: uppercase; color: var(--clay); margin-bottom: 12px; }
+body.court-awaiting #inputSection textarea, body.court-awaiting .dropzone { background: rgba(251,246,236,.06); border-color: #5a3e2e; color: #f6ebdd; }
+body.court-awaiting #inputSection textarea::placeholder { color: #9c8a78; }
+body.court-awaiting .switch { background: rgba(255,255,255,.06); }
+body.court-awaiting .switch-btn { color: #cdb8a3; }
+body.court-awaiting .switch-btn.active { background: #f3e7d8; color: #2b2722; }
+body.court-awaiting .examples, body.court-awaiting .hint, body.court-awaiting .muted { color: #9c8a78; }
+body.court-awaiting .example-chip, body.court-awaiting .link, body.court-awaiting .text-btn { color: #e8a184; text-decoration-color: rgba(232,161,132,.4); }
+body.court-awaiting .primary { background: var(--clay); color: #1b120d; }
+body.court-awaiting .primary:hover { background: #e8906f; }
+body.court-awaiting kbd { background: transparent; border-color: #5a3e2e; color: #cdb8a3; }
+body.court-awaiting #messageInput { min-height: 110px; }
+@keyframes panelIn { from { opacity: 0; transform: translate(-50%, 24px) } to { opacity: 1; transform: translate(-50%, 0) } }
+@media (max-width: 700px) {
+  .charter-doc { padding: 34px 22px 28px; }
+  body.court-awaiting #inputSection { bottom: 12px; }
+}
+.bubble.label { width: auto; padding: 4px 11px; border-radius: 999px; }
+.bubble.label .bubble-text, .bubble.label .bubble-score { display: none; }
+.bubble.label .bubble-name { font-size: 12px; white-space: nowrap; }
+.bubble.label::after { width: 9px; height: 9px; margin-left: -4.5px; bottom: -5px; }
+.stage.immersive .bubble.label { background: rgba(20,14,11,.72); border-color: #4a3426; }
+.stage.immersive .bubble.label::after { background: rgba(20,14,11,.72); border-color: #4a3426; }
+.stage.immersive .bubble.label .bubble-name { color: #f1e4d6; }
